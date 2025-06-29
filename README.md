@@ -1,7 +1,7 @@
 # URLCrawling
 
-First slow Crawling(no Concuerency)
+First slow Crawling(no Concurrency)
 
-Second Fast Crawling(Concuerency)
+Second Fast Crawling(Concurrency)
 
 hihi
