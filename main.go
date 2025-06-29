@@ -12,7 +12,7 @@ import (
 
 var baseURL string = "https://www.saramin.co.kr/zf_user/search/recruit?&searchword=python"
 
-type jobs struct {
+type extractedJob struct {
 	id          string
 	title       string
 	location    string
@@ -46,7 +46,7 @@ func getPage(page int) {
 	// https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=공고ID
 
 	doc.Find(".item_recruit").Each(func(i int, s *goquery.Selection) {
-		extjob(s)
+		extractJob(s)
 	})
 }
 
@@ -73,7 +73,7 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), "")
 }
 
-func extjob(s *goquery.Selection) {
+func extractJob(s *goquery.Selection) {
 	// Attr : attribute(속성), value, id, class, href ...etc
 	id, _ := s.Attr("value")
 	title := cleanString(s.Find(".job_tit").Text())
