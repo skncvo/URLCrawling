@@ -25,18 +25,23 @@ type extractedJob struct {
 
 func main() {
 	totalPages := getPages()
+
 	var jobs []extractedJob
+	c := make(chan []extractedJob)
 
 	for i := 1; i <= totalPages; i++ {
-		job := getPage(i)
-		jobs = append(jobs, job...)
+		go getPage(i, c)
+	}
+
+	for i := 1; i <= totalPages; i++ {
+		jobs = append(jobs, <-c...)
 	}
 
 	writeJob(jobs)
 }
 
 // page url 불러오기
-func getPage(page int) []extractedJob {
+func getPage(page int, mainC chan []extractedJob) {
 	// page 값을 적용할 URL에 맞게 변경
 	pageURL := baseURL + pageNumAppear + strconv.Itoa(page)
 	fmt.Println("Request:", pageURL)
@@ -51,13 +56,18 @@ func getPage(page int) []extractedJob {
 	checkErr(err)
 
 	var jobs []extractedJob
+	c := make(chan extractedJob)
 
-	doc.Find(".item_recruit").Each(func(i int, s *goquery.Selection) {
-		job := extractJob(s)
-		jobs = append(jobs, job)
+	cards := doc.Find(".item_recruit")
+	cards.Each(func(i int, s *goquery.Selection) {
+		go extractJob(s, c)
 	})
 
-	return jobs
+	for i := 0; i < cards.Length(); i++ {
+		jobs = append(jobs, <-c)
+	}
+
+	mainC <- jobs
 }
 
 // source code 에서 pagination 가져와 page 개수 파악
@@ -95,7 +105,7 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), "")
 }
 
-func extractJob(s *goquery.Selection) extractedJob {
+func extractJob(s *goquery.Selection, c chan extractedJob) {
 	// Attr : attribute(속성), value, id, class, href ...etc
 	id, _ := s.Attr("value")
 	title := cleanString(s.Find(".job_tit").Text())
@@ -105,7 +115,7 @@ func extractJob(s *goquery.Selection) extractedJob {
 	requirement := cleanString(req.Text())
 	company := cleanString(s.Find(".area_corp>.corp_name").Text())
 
-	return extractedJob{
+	c <- extractedJob{
 		id:          id,
 		title:       title,
 		location:    location,
