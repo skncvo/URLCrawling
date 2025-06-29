@@ -72,6 +72,7 @@ func getPages() int {
 func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), "")
 }
+
 func extjob(s *goquery.Selection) {
 	// Attr : attribute(속성), value, id, class, href ...etc
 	id, _ := s.Attr("value")
@@ -80,7 +81,7 @@ func extjob(s *goquery.Selection) {
 	req := s.Find(".job_sector").Clone()
 	req.Find(".job_day").Remove()
 	requirement := cleanString(req.Text())
-	company := cleanString(s.Find(".area_corp>corp_name").Text())
+	company := cleanString(s.Find(".area_corp>.corp_name").Text())
 
 	fmt.Println(id, title, location, requirement, company)
 }
