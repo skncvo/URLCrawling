@@ -5,11 +5,20 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 var baseURL string = "https://www.saramin.co.kr/zf_user/search/recruit?&searchword=python"
+
+type jobs struct {
+	id          string
+	title       string
+	location    string
+	requirement string
+	company     string
+}
 
 func main() {
 	totalPages := getPages()
@@ -37,19 +46,7 @@ func getPage(page int) {
 	// https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=공고ID
 
 	doc.Find(".item_recruit").Each(func(i int, s *goquery.Selection) {
-		// Attr : attribute(속성), value, id, class, href ...etc
-		id, _ := s.Attr("value")
-
-		// job_tit의 a를 찾는다
-		title := s.Find(".job_tit>a").Text()
-		condition := s.Find(".job_condition").Text()
-
-		// 특정 span 적용 안되게
-		jobsel := s.Find(".job_sector").Clone()
-		jobsel.Find(".job_day").Remove()
-		job_sector := jobsel.Text()
-		fmt.Println(id, title, condition, job_sector)
-
+		extjob(s)
 	})
 }
 
@@ -70,6 +67,22 @@ func getPages() int {
 	})
 
 	return pages
+}
+
+func cleanString(str string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), "")
+}
+func extjob(s *goquery.Selection) {
+	// Attr : attribute(속성), value, id, class, href ...etc
+	id, _ := s.Attr("value")
+	title := cleanString(s.Find(".job_tit").Text())
+	location := cleanString(s.Find(".job_condition>span>a").Text())
+	req := s.Find(".job_sector").Clone()
+	req.Find(".job_day").Remove()
+	requirement := cleanString(req.Text())
+	company := cleanString(s.Find(".area_corp>corp_name").Text())
+
+	fmt.Println(id, title, location, requirement, company)
 }
 
 func checkErr(err error) {
